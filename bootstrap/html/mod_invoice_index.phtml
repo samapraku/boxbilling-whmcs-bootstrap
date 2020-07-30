@@ -15,7 +15,7 @@
 {% endblock %}
 {% block content %}
 
-		<table class="dtt">
+		<table class="dtbl">
 			<thead>
 				<tr>
 					<th>Invoice #</th>
@@ -71,3 +71,21 @@
 
 {% endblock %}
 
+{% block js %}
+{% autoescape "js" %}
+<script type="text/javascript">
+$(function() {	
+
+	$('.dtbl').DataTable({
+		"initComplete": function(settings, json) {
+		    $('.dataTables_filter input[type=search]').prop({
+		    	placeholder: 'Enter search term...'
+		    });
+		  },
+		  "order": [[4, 'desc']]
+	});
+    
+});
+</script>
+{% endautoescape %}
+{% endblock %}

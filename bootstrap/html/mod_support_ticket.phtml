@@ -21,7 +21,16 @@
 {% block content %}
 		<div class="well">
 			<div class="row">
-				{% if ticket.status != "closed" %}
+				{% if ticket.status == "closed" %}
+				<div class="col-sm-12">
+					<div class="alert alert-warning text-center">
+					{% trans 'This ticket has been closed. Please submit a New Ticket If you have any un-related issue.' %}.
+					<p><small>{{ ticket.updated_at|timeago }} {% trans 'ago' %}</small></p>
+					</div>
+				</div>
+				
+				{% else %}
+				{% endif %}
 					<div class="col-sm-12">
 						<div class="panel panel-primary">
 							<div class="panel-heading" id="replyticket" style="font-size:16px;"><i class="fa fa-pencil"></i>&nbsp;&nbsp;Reply</div>
@@ -29,7 +38,7 @@
 								<form method="post" action="" class="api_form" data-api-url="{{ 'api/client/support/ticket_reply'|link }}" data-api-reload="1">
 									<div class="control-group form-group">
 										<div class="controls">
-											<textarea id="tiny" rows="10" cols="100" class="form-control" name="content" maxlength="999" style="resize:none" required="required" data-iconlibrary="fa"></textarea>
+										<textarea rows="10" cols="100" class="form-control" name="content" maxlength="999" style="resize:none" required="required" data-provide="markdown" data-iconlibrary="fa"></textarea>
 										</div>
 									</div>
 									<input type="hidden" name="id" value="{{ ticket.id }}">
@@ -40,14 +49,6 @@
 						</div>
 						
 					</div>
-				{% else %}
-				<div class="col-sm-12">
-					<div class="alert alert-warning text-center">
-					Ticket ini sudah ditutup. Silakan Submit Ticket Baru Apabila Masih Terdapat Kendala.
-					<p><small>{{ ticket.updated_at|timeago }} {% trans 'ago' %}</small></p>
-					</div>
-				</div>
-				{% endif %}
 				<div style="height : 20px" class="col-sm-12"></div>
 				{% for i, message in ticket.messages %}
 				<div class="ticketmsg col-sm-12">
@@ -129,17 +130,15 @@
 				});
 
 				for (var i = n-1; i >=0 ; i--) {
-					console.log (i);
 					$('#msg-'+ (i-1)).insertAfter('#msg-'+i);
 				}
 
-				$('#reply-btn').click(function(event) {
-					tinymce.execCommand('mceFocus',false,'tiny');
-				});
-				
 				$('#close-ticket-btn').click(function(event) {
 					$('#close-ticket-a').click();
 				});
+
+				$('textarea').after(`<p style="margin-top:10px;margin-left:10px;font-size: 12px;"><a href="https://prnt.sc/" target="prnt.sc"><i class='fa fa-upload'> </i> Upload Screenshot</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://dropbox.com" target="uploadfiles.io"><i class='fa fa-dropbox'> </i> Dropbox</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://drive.google.com" target="uploadfiles.io"><i class='fa fa-cloud-upload'> </i> Google Drive</a></p>`);
+
 
 			});
 		</script>

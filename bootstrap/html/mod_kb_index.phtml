@@ -21,6 +21,17 @@
 {% endblock %}
 {% block content %}
 
+            <div class="well">
+                <h4>{% trans 'What are you looking for?' %}</h4>
+				<form method="get" action="{{ 'kb'|link }}">
+                    <div class="input-group">
+						<input name="q" type="text" class="form-control" value="{{ request.q }}" placeholder="{% trans 'What are you looking for?' %}">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+				</form>
+            </div>
 				{% for i, category in kbcategories.list %}
 				<h2 id="category-{{category.id}}">
                     <a href="{{ 'kb'|link }}/{{ category.slug }}">{{category.title}}</a>

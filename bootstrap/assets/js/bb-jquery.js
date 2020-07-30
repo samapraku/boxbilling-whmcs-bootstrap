@@ -234,10 +234,10 @@ $("input").each(
 });
 
 jQuery(function ($) {
-    $('.loading').ajaxStart(function() {
-        $(this).show();
+    $(document).ajaxStart(function() {
+        $('.loading').show();
     }).ajaxStop(function() {
-        $(this).hide();
+        $('.loading').hide();
     });
 
     $("div.simpleTabs").simpleTabs();

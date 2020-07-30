@@ -1,0 +1,210 @@
+{% set nr = invoice.serie ~ "%05s"|format(invoice.nr) %}
+{% set seller = invoice.seller %}
+{% set buyer = invoice.buyer %}
+{% set company  = guest.system_company %}
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" media="screen">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" media="print">	
+        
+        <link rel="shortcut icon" href="{{ 'favicon.ico' | asset_url }}">
+
+        <style>
+    @media print {
+    html, body{
+    margin-right: 75%;
+        left: 0px;
+    }
+    .dl-horizontal dt{
+        width: auto;
+    }
+    .dl-horizontal dd{
+        margin-left: 30%;
+    }
+    .invoice-well dt{
+        padding-right: 5px;
+    }
+    #proforma-invoice{
+        width: 650px;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+
+    #invoice-title{
+        text-align: center;
+        padding-bottom: 3%;
+    }
+}
+    html, body{
+        margin-right: 9%;
+        left: 0px;
+    }
+    .dl-horizontal dt{
+        width: auto;
+    }
+    .dl-horizontal dd{
+        margin-left: 30%;
+    }
+    .invoice-well dt{
+        padding-right: 5px;
+    }
+    #proforma-invoice{
+       
+        margin: 0 auto;
+        display: block;
+    }
+
+    #invoice-title{
+        text-align: center;
+        padding-bottom: 3%;
+    }
+    .col-centered{
+	float: none;
+	margin: 0 auto;
+	}
+
+</style>
+    </head>
+    <body>
+    
+    <div class="container">
+     <div class="row">
+        <article class="col-md-6 col-centered">
+            <div class="data-container">
+                <header>
+                    <h2 id="invoice-title"> {% if invoice.status == 'paid' %} {% trans 'Receipt' %} {% else %}  {% trans 'Invoice' %} {% endif %} {{nr}}</h2>
+                </header>
+                <section>
+                
+		<div class="panel panel-default">
+		<div class="panel-body">
+		<div class="row">
+			<div class="col-md-6">
+				{% if company.logo_url %}
+                <img src="{{company.logo_url}}" alt="{{company.name}}" style="max-width: 100%; max-height: 100%"/>
+                {% else %}
+                <img src=" {{ 'images/logo.png' | asset_url }}" alt="{{company.name}}" style="max-width: 100%; max-height: 100%"/>
+                {% endif %}
+			</div>
+			<div class="col-md-6 text-right">
+				<h2>{% if invoice.status == 'unpaid' %}{% trans 'Invoice' %} {% elseif invoice.status == "paid" %}{% trans 'Receipt' %} {% endif%}{{ invoice.serie_nr }}</h2>
+                <p>
+					{% if invoice.paid_at %}
+					{% trans 'Paid at'%}:{{ invoice.paid_at | bb_date }}
+					{% else %}
+					{% trans 'Created' %}: {{ invoice.created_at | bb_date }}
+					{% endif %}
+                </p>
+				<h2 class="invoice_{{invoice.status }}">{{ invoice.status|capitalize  }}</h2>
+				{% trans 'Due' %}: {{ invoice.due_at | bb_date }}
+
+			</div>
+			<div class="col-md-12">
+				<hr />
+			</div>
+			<div class="col-md-6">
+				<address>
+					{% if seller.company %}<strong>{{ seller.company }}</strong><br />{% endif %}
+					{% if seller.address %}{{ seller.address }}<br />{% endif %}
+					{% if seller.phone %}{{ seller.phone }}<br />{% endif %}
+					{% if seller.email %}{{ seller.email }}<br />{% endif %}
+					{% if company.account_number %}{% trans 'Account' %}: {{ company.account_number }}<br />{% endif %}
+					{% if company.number %}{% trans 'Company number' %}: {{ company.number }}<br />{% endif %}
+					{% if company.vat_number %}{% trans 'VAT' %}: {{ company.vat_number }}<br />{% endif %}
+					{# Company note #}{# if company.note %}{{ company.note }}<br />{% endif #}
+				</address>
+			</div>
+			<div class="col-md-6 text-right">
+				<address>
+					{% if buyer.company %}<strong>{{ buyer.company }}</strong><br />{% endif %}
+					{% if buyer.first_name or buyer.last_name %}<strong>{{ buyer.first_name }} {{ buyer.last_name }}</strong><br />{% endif %}
+					{% if buyer.email %}{{ buyer.email }}<br />{% endif %}
+					{% if buyer.address %}{{ buyer.address }} {{ buyer.city }} {{ buyer.state }} {{ buyer.postcode }} {{ buyer.country }}<br />{% endif %}
+					{% if buyer.phone %}{{ buyer.phone }}<br />{% endif %}
+				</address>
+			</div>
+
+			{% if invoice.text_1 %}
+			<div class="col-md-12">
+				{{ invoice.text_1|markdown }}
+			</div>
+			{% endif %}
+
+			<div class="col-md-12">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						{% trans 'Invoice' %}
+					</div>
+					<div class="panel-body">
+						<table class="table table-hover">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>{% trans 'Title' %}</th>
+									<th class="currency">{% trans 'Price' %}</th>
+									<th class="currency">{% trans 'Total' %}</th>
+								</tr>
+							</thead>
+
+							<tbody>
+								{% for i, item in invoice.lines %}
+
+								<tr class="{{ cycle(['odd', 'even'], i) }}">
+									<td>{{ i+1 }}.</td>
+									<td>										
+										{{ item.title }}
+									</td>
+									<td class="currency">
+										{{ item.price | money(invoice.currency) }}
+										{% if item.quantity > 1 %}
+										x {{ item.quantity }} {# item.unit #}
+										{% endif %}
+									</td>
+									<td class="currency">{{ item.total | money(invoice.currency) }}</td>
+								</tr>
+
+								{% endfor %}
+							</tbody>
+
+							<tfoot>
+							{% if invoice.tax > 0 %}
+								<tr>
+									<th colspan="3">{{ invoice.taxname }} {{ invoice.taxrate }}%</th>
+									<th class="currency">{{ invoice.tax | money(invoice.currency) }}</th>
+								</tr>
+							{% endif %}
+
+							{% if invoice.discount > 0 %}
+								<tr>
+									<th colspan="3">{% trans 'Discount' %}</th>
+									<th class="currency">{{ invoice.discount | money(invoice.currency) }}</th>
+								</tr>
+							{% endif %}
+								<tr class="total">
+									<th colspan="3" class="text-right">{% trans 'Total' %}</th>
+									<th class="currency">{{ invoice.total | money(invoice.currency) }}</th>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			{% if invoice.text_2 %}
+			<div class="col-md-12">
+				{{ invoice.text_2|markdown }}
+			</div>
+			{% endif %}
+
+		</div>
+		</div>
+                </section>
+            </div>
+        </article>
+    </div>
+    </div>
+   
+    </body>
+</html>

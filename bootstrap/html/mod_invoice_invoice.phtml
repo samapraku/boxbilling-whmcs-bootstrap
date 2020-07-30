@@ -16,30 +16,51 @@
 				<h1 class="page-header">{% trans 'Proforma Invoice' %}
 					<small>{% trans 'Please choose payment type and pay for your chosen products.' %}</small>
 				</h1>
-				{% include "partial_steps.phtml" with {'selected': 4} %}
-				{% else %}
-				<h1 class="page-header">{% trans 'Invoice' %} {{ nr }}
+				{% elseif invoice.status == "paid" %}
+				<h1 class="page-header">{% trans 'Receipt' %} {{ nr }}
 					<small>{% trans 'Invoice is paid' %}</small>
 				</h1>
+				{% endif %}
 				<ol class="breadcrumb">
 					<li><a href="{{ '/invoice'|link }}">{% trans 'Invoices' %}</a></li>
 					<li class="active">{{ "Invoice #%05s"|format(invoice.id) }}</li>
 				</ol>
-				{% endif %}
             </div>
         </div>
         <!-- /.row -->
 {% endblock %}
 {% block content %}
 	
+	{% set banklink =  'invoice/banklink' | link %}
 	{% if invoice.status == 'unpaid' %}
-			<div class="alert alert-warning text-center">
-				<h4>{% trans 'Unpaid' %}</h4>
-				{% if invoice.gateway_id and not request.change_payment_method %}
+				<div class="row">
+					<div class="col-lg-6 col-centered">
+					<h4>{% trans 'Select Payment Method to view details' %}</h4>
+					<select name="payment_method" id="payment-selector" class="form-control">
+    		    {% if invoice.gateway_id is null %}<option value="" selected disabled hidden>-- Select Payment Method --</option> {% endif%}
+				{% for gtw in guest.invoice_gateways %}
+    			{% if invoice.currency in gtw.accepted_currencies %}
+		        <option data-value="{{ gtw | json_encode }}" value="{{gtw.id}}" {% if invoice.gateway_id == gtw.id %} selected {% endif %}>{{ gtw.title }}</option>
+    			{% endif %}
+    			{% endfor %}
+				</select>
+					</div>
+				</div>
+				
+				<div class="text-center">
+					<div class="panel-body" id="gtw-actions"></div>
+				</div>
+				{% if invoice.gateway_id and request.auto_redirect %}
 				{% set payment = guest.invoice_payment({"gateway_id" : invoice.gateway_id, "hash":invoice.hash, "auto_redirect":request.auto_redirect }) %}
+					<div class="alert alert-info" id="payment-details">
 
 						{% if payment.type == 'html' %}
-							{{ payment.result|replace({'bb-button': 'btn btn-warning'})|raw }}
+						<div class="panel panel-primary">
+						<div class="panel-body">								
+							{{ include(template_from_string(payment.result)) }} 
+							</div>
+						</div>
+							
 						{% endif %}
 							{% if payment.type == 'form' %}
 							<h2>{% trans 'Redirecting to payment gateway..' %}</h2>
@@ -58,6 +79,7 @@
 								});
 							</script>
 							{% endif %}
+					</div>
 				{% endif %}
 
 				{% if request.change_payment_method %}
@@ -79,11 +101,10 @@
 								{% endif %}
 							{% endfor %}
 						</div>
-						<button class="btn btn-warning btn-lg" type="submit"><i class="fa fa-credit-card"></i> {% trans 'Pay now' %} - {% trans 'Total:' %} <strong>{{ invoice.total | money(invoice.currency) }}</strong></button>
+						<button class="btn btn-warning btn-lg" type="submit"><i class="fa fa-credit-card"></i> {% trans 'Pay Now' %} - {% trans 'Total:' %} <strong>{{ invoice.total | money(invoice.currency) }}</strong></button>
 						<input type="hidden" name="hash" value="{{invoice.hash}}"/>
 					</form>
 				{% endif %}
-			</div>
 	{% endif %}
 	
 		<div class="panel panel-default">
@@ -97,15 +118,17 @@
                 {% endif %}
 			</div>
 			<div class="col-md-6 text-right">
-				<h2>{% trans 'Invoice' %} {{ invoice.serie_nr }}</h2>
+				<h2>{% if invoice.status == 'unpaid' %}{% trans 'Invoice' %} {% elseif invoice.status == "paid" %}{% trans 'Receipt' %} {% endif%}{{ invoice.serie_nr }}</h2>
                 <p>
 					{% if invoice.paid_at %}
-					{{ invoice.paid_at | date('Y-m-d h:i') }}
+					{% trans 'Paid at'%}:{{ invoice.paid_at | bb_date }}
 					{% else %}
-					{{ invoice.created_at | date('Y-m-d h:i') }}
+					{% trans 'Created' %}: {{ invoice.created_at | bb_date }}
 					{% endif %}
                 </p>
-				<h2 class="invoice_{{invoice.status }}">{% if invoice.status == 'unpaid' %}{% trans 'Unpaid' %}{% else %}{% trans 'Paid' %}{% endif %}</h2>
+				<h2 class="invoice_{{invoice.status }}">{{ invoice.status|capitalize  }}</h2>
+				{% trans 'Due' %}: {{ invoice.due_at | bb_date }}
+
 			</div>
 			<div class="col-md-12">
 				<hr />
@@ -165,14 +188,18 @@
 										{% else %}
 										{{ item.title }}
 										{% endif %}
-									</td>
-									<td class="currency">
-										{{ item.price | money(invoice.currency) }}
 										{% if item.quantity > 1 %}
 										x {{ item.quantity }} {# item.unit #}
 										{% endif %}
 									</td>
-									<td class="currency">{{ item.total | money(invoice.currency) }}</td>
+									<td class="currency">
+										{{ item.price | money(invoice.currency) }}
+									</td>
+									<td class="currency">							
+                    					{% if (item.price * item.quantity) > item.total %}
+                    					{% set subtotal = item.price * item.quantity %}<del>{{subtotal}}</del> {% endif %}
+										{{ item.total | money(invoice.currency) }}
+									</td>
 								</tr>
 
 								{% endfor %}
@@ -213,9 +240,9 @@
 		<div class="panel-footer text-center">
 			<p>
 				{% if invoice.status == 'unpaid' %}
-				<a class="btn btn-primary" href="{{ ('invoice/'~invoice.hash)|link({'change_payment_method' : 1}) }}"><i class="fa fa-credit-card"></i> {% trans 'Change payment method' %}</a>
+				<!-- a class="btn btn-primary" href="{{ ('invoice/'~invoice.hash)|link({'change_payment_method' : 1}) }}"><i class="fa fa-credit-card"></i> {% trans 'Change payment method' %}</a -->
 				{% endif %}
-				<a class="btn btn-info" href="{{ 'invoice/pdf' | link }}/{{invoice.hash}}"><i class="fa fa-file-pdf-o"></i> {% trans 'Download PDF' %}</a>
+				<a class="btn btn-info" href="{{ 'invoice/print' | link }}/{{invoice.hash}}"><i class="fa fa-file-pdf-o"></i> {% trans 'Print' %}</a>
 			</p>
 		</div>
 		</div>
@@ -241,7 +268,7 @@
         <tbody>
             {% for i, tx in transactions %}
             <tr class="{{ cycle(['odd', 'even'], i) }}">
-                <td>{{tx.created_at|date('Y-m-d h:i') }}</td>
+                <td>{{tx.created_at| bb_date }}</td>
                 <td>{{tx.txn_id}}</td>
                 <td>{{tx.gateway|default('-')}}</td>
                 <td>{{ tx.amount | money(tx.currency) }}</td>
@@ -255,5 +282,56 @@
 
 {% endblock %}
 
+{% block js %}
 
 
+<script type="text/javascript">
+$(document).ready(function(){
+
+			$('#payment-selector').change(paymentMethodChanged);
+			let options = $('#payment-selector option').length;			
+			if(options > 0){
+    			//$('#payment-selector').trigger('change');
+				let gtw_id = $('#payment-selector').find(":selected").data("value").id;
+				if(gtw_id){
+				loadGtwActions(gtw_id);
+				}
+				else {
+					$('#click-to-pay').addClass('hidden');
+				}
+			}
+			else {
+					$('#payment-selector').addClass('hidden');
+					$('#gtw-actions').addClass('hidden');
+				}
+	});
+
+	function paymentMethodChanged(event){
+		$('#gtw-actions').html('');
+		let gtw_id = $('#payment-selector').find(":selected").data("value").id;
+		updateInvoice(gtw_id);
+	}
+	
+
+	function loadGtwActions(gtway_id){			
+				let btn = $(`<button type="button" class="btn btn-warning btn-lg" id="click-to-pay" > <i class="fa fa-credit-card"></i> {% trans "Pay now" %} - {% trans "Total:" %} <strong>{{ invoice.total | money(invoice.currency) }}</strong></button>`);
+				$('#gtw-actions').html(btn);
+				$('#click-to-pay').addClass('visible');
+
+				$('#click-to-pay').on('click', function(){
+					bb.redirect("{{ 'invoice' | link }}/{{ invoice.hash}}?gateway_id="+gtway_id+"&auto_redirect=1" );
+				});
+	}
+
+	function updateInvoice(gtw_id){		
+        bb.post(
+            '{{ 'api/guest/invoice/update'|link }}',
+            {gateway_id:gtw_id, hash:'{{invoice.hash}}' },
+            function(result) {
+                bb.redirect("{{ 'invoice' | link }}/{{ invoice.hash}}");
+            }
+        );
+        return false;
+    }
+</script>
+{% endblock %}

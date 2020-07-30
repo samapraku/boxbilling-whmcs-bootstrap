@@ -3,6 +3,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>{% block meta_title %}{% endblock %} {{ settings.meta_title }}</title>
 
     <meta property="bb:url" content="{{ constant('BB_URL') }}"/>
@@ -17,7 +21,9 @@
     <link rel="shortcut icon" href="{{ 'favicon.ico' | asset_url }}" />
 	
 	<!-- Bootstrap Core CSS -->
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">	
+	{% if settings.theme != "default" %}<link href="{{ 'css/themes/theme-' | asset_url }}{{ settings.theme }}.min.css" rel="stylesheet">
+	{% else %}<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">	
+	{% endif %}
 
 	<!-- Bootstrap Markdown Editor -->
     <link href="{{ 'css/bootstrap-markdown.min.css' | asset_url }}" rel="stylesheet">
@@ -45,20 +51,19 @@
     <!-- Bootstrap Core JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	
-	<!-- Bootstrap Markdown Editor -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/to-markdown/3.1.0/to-markdown.min.js"></script>
-	<script src="{{ 'js/markdown.js' | asset_url }}"></script>
 
 	<!-- Data Tables -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.16/css/jquery.dataTables.min.css">
 
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.6.6/tinymce.min.js"></script>
+	<!-- Custom -->
+    <link href="{{ 'css/custom.css' | asset_url }}" rel="stylesheet" type="text/css">
+	<script src="{{ 'js/custom.js' | asset_url }}"></script>
 
-
-	<!-- Custom CSS/JS -->
-	<link href="{{ 'css/bimasoft.css' | asset_url }}" rel="stylesheet" type="text/css">
-	<script src="{{ 'js/bimasoft.js' | asset_url }}"></script>
+	<!-- Bootstrap Markdown Editor -->
+	<script src="{{ 'js/bootstrap-markdown.js' | asset_url }}"></script>
+	<script src="{{ 'js/to-markdown.js' | asset_url }}"></script>
+	<script src="{{ 'js/markdown.js' | asset_url }}"></script>
 
 	<!-- Bootbox Alerts JavaScript -->
     <script src="{{ 'js/bootbox.min.js' | asset_url }}"></script>
@@ -89,33 +94,47 @@
 {% endif %}
 
 	<!-- Navigation -->
-    <nav class="navbar navbar-inverse" role="navigation">
+    <div class="navbar navbar-inverse" role="navigation">
         <div class="container">
             <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#mainmenu">
+		<div class="navbar-header  animated-collapse-icon">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#mainmenu">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
                     <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
                 </button>
+        <a class="navbar-brand hidden-xs" href="index.php">
+			{% if company.logo_url %}<a href="{{ ''|link }}"><img src="{{company.logo_url}}" alt="{{company.name}}" id="company-logo" class="img-responsive"  style="width:auto; margin-left: 15px; padding-bottom: 10px;"/></a>
+			{% else %}<h1><a href="{{ ''|link }}"><img src=" {{ 'images/logo_new.svg' | asset_url }}" alt="{{company.name}}" class="img-responsive" /></a></h1>
+			{% endif %}		
+		</a>
             </div>
+		
             <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="mainmenu">
+            <nav class="collapse navbar-collapse" id="mainmenu"  role="navigation">
 				<ul class="nav navbar-nav navbar-right">
-					<li><a href="{{ 'cart'|link }}" title="{% trans 'Shopping cart' %}"><i class="fa fa-shopping-cart"></i> {% trans 'Shopping cart' %}</a></li>
-					{% if settings.side_menu_home %}<li class="visible-xs"><a href="{{ ''|link }}" title="{% trans 'Home' %}" ><i class="fa fa-home"></i> {% trans 'Home' %}</a></li>{% endif %}
-					{% if settings.side_menu_order %}<li class="visible-xs"><a href="{{ '/order'|link }}" title="{% trans 'Order' %}" ><i class="fa fa-shopping-cart"></i> {% trans 'Order' %}</a></li>{% endif %}
-					{% if settings.side_menu_blog and guest.extension_is_on({"mod":"news"}) %}<li class="visible-xs"><a href="{{ '/news'|link }}" title="News" ><i class="fa fa-news"></i> News</a></li>{% endif %}
+					{% if settings.side_menu_home %}<li class="visible-xs"><a href="{{ ''|link }}" title="{% trans 'Home' %}" ><i class="fa fa-home"></i> {% trans 'Dashboard' %}</a></li>{% endif %}
+					{% if client %}
+					{% set profile = client.client_get %}
+						{% if settings.side_menu_services %}<li class="visible-xs"><a href="{{ 'order/service'|link }}" title="{% trans 'Services' %}"><i class="fa fa-cog"></i> {% trans 'My Services' %}</a></li>{% endif %}
+						{% if settings.side_menu_invoices %}<li class="visible-xs"><a href="{{ 'invoice'|link }}" title="{% trans 'Invoices' %}"><i class="fa fa-credit-card"></i> {% trans 'Invoices' %}</a></li>{% endif %}
+						{% if settings.side_menu_support %}<li class="visible-xs"><a href="{{ 'support'|link }}" title="{% trans 'Tickets' %}"><i class="fa fa-life-ring"></i> {% trans 'Support Tickets' %}</a></li>{% endif %}
+				
+					{% else %}			
+						<li><a href="" data-toggle="modal" data-target="#login"><i class="fa fa-user"></i> {% trans 'Sign in' %}</a></li>
+						<li><a href="{{ 'login'|link({'register' : 1}) }}"><i class="fa fa-user-plus"></i> {% trans 'Register' %}</a></li>
+					{% endif %}	
+					{% if settings.side_menu_blog and guest.extension_is_on({"mod":"news"}) %}<li class="visible-xs"><a href="{{ '/news'|link }}" title="News" ><i class="fa fa-newspaper-o"></i> {% trans 'Announcements' %}</a></li>{% endif %}
 					{% if settings.side_menu_forum and guest.extension_is_on({"mod":"forum"}) %}<li class="visible-xs"><a href="{{ '/forum'|link }}"><i class="fa fa-comments"></i> {% trans 'Forum' %}</a></li>{% endif %}
 					{% if settings.side_menu_kb and guest.extension_is_on({"mod":"kb"}) %}<li class="visible-xs"><a href="{{ 'kb'|link }}" title="{% trans 'Knowledge Base' %}"><i class="fa fa-graduation-cap"></i> {% trans 'Knowledge Base' %}</a></li>{% endif %}
 					{% if settings.side_menu_contact %}<li class="visible-xs"><a href="{{ '/support/contact-us'|link }}"><i class="fa fa-envelope"></i> {% trans 'Contact us' %}</a></li>{% endif %}
+					<li role="separator" class="divider-vertical"></li>
+					{% set cart = guest.cart_get %}				
+					{% if settings.side_menu_order %}<li class="visible-xs"><a href="{{ '/order'|link }}" title="{% trans 'Order' %}" ><i class="fa fa-shopping-cart"></i> {% trans 'New Order' %}</a></li>{% endif %}
+					<li><a href="{{ 'cart'|link }}" title="{% trans 'Shopping cart' %}"><i class="fa fa-shopping-cart"></i> {% trans 'Shopping cart' %}{% if cart.items|length > 0 %}<span class="badge">{{ cart.items|length }}</span>{% endif %}</a>
+					  <span class="sr-only">items in cart</span></li>
 					{% if client %}
-					{% set profile = client.client_get %}
-						{% if settings.side_menu_services %}<li class="visible-xs"><a href="{{ 'order/service'|link }}" title="{% trans 'Services' %}"><i class="fa fa-cog"></i> {% trans 'Services' %}</a></li>{% endif %}
-						{% if settings.side_menu_support %}<li class="visible-xs"><a href="{{ 'support'|link }}" title="{% trans 'Tickets' %}"><i class="fa fa-life-ring"></i> {% trans 'Support' %}</a></li>{% endif %}
-						{% if settings.side_menu_invoices %}<li class="visible-xs"><a href="{{ 'invoice'|link }}" title="{% trans 'Invoices' %}"><i class="fa fa-credit-card"></i> {% trans 'Invoices' %}</a></li>{% endif %}
-						<li><a href="{{ ''|link }}" title="{% trans 'Dashboard' %}"><i class="fa fa-home"></i> {% trans 'Dashboard' %}</a></li>
 						<li class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-user"></i> {{ (profile.first_name ~ " " ~ profile.last_name) }} <span class="caret"></span></a>
 							<ul class="dropdown-menu">
@@ -125,34 +144,20 @@
 								<li><a href="{{ 'client/logout'|link }}" title="{% trans 'Sign out' %}"><i class="fa fa-sign-out"></i> {% trans 'Sign out' %}</a></li>
 							</ul>
 						</li>
-					{% else %}			
-						<li><a href="" data-toggle="modal" data-target="#login"><i class="fa fa-user"></i> {% trans 'Sign in' %}</a></li>
-						<li><a href="{{ 'login'|link({'register' : 1}) }}"><i class="fa fa-user-plus"></i> {% trans 'Register' %}</a></li>
 					{% endif %}
 				</ul>
-            </div>
+            </nav>
             <!-- /.navbar-collapse -->
+			 
         </div>
         <!-- /.container -->
-    </nav>
+    </div>
 
 {% block content_banner %}{% endblock %}
-<div class="container" id="company-logo">
-	<div class="row">
-		<div class="col-md-6">
-			{% if company.logo_url %}<h1><a href="{{ ''|link }}"><img src="{{company.logo_url}}" alt="{{company.name}}" class="img-responsive" /></a></h1>
-			{% else %}<h1><a href="{{ ''|link }}"><img src=" {{ 'images/logo_new.svg' | asset_url }}" alt="{{company.name}}" class="img-responsive" /></a></h1>
-			{% endif %}			
-		</div>
-	</div>
-</div>
-<div class="navbar2">
-	<div class="container">
-		<div class="row">
-			<div class="hidden-xs">{% include "partial_menu.phtml" %}</div>
-		</div>
-	</div>
-</div>
+
+
+{% include "partial_menu.phtml" %}
+		
 <div class="container">
 	<div class="row">
 
@@ -174,8 +179,8 @@
 			
 
 			{% if profile.first_name %}
-			<div class="panel panel-default">
-			  <div class="panel-heading"><i class="fa fa-user"></i>&nbsp;&nbsp;Informasi Anda</div>
+			<div class="panel panel-default hidden-sm hidden-xs">
+			  <div class="panel-heading"><i class="fa fa-user"></i>&nbsp;&nbsp;{% trans 'Your information' %}</div>
 			  <div class="panel-body">
 			  	<div class="fullname">{{ profile.first_name }} {{ profile.last_name }}</div>
 			  	<div>{{ profile.address_1 }}</div>
@@ -194,8 +199,8 @@
 			<div class="panel panel-default">
 			  <div class="panel-heading"><i class="fa fa-bookmark"></i>&nbsp;&nbsp;Shortcuts</div>
 			  <div class="panel-body layanan">
-			  		  <a href="{{ '/order'|link }}"><i class="fa fa-shopping-cart fa-fw"></i> Pesan Layanan Baru</a>
-  					  <a href="{{ '/order/domain-checker'|link }}"><i class="fa fa-globe fa-fw"></i> Pesan Domain </a>
+			  		  <a href="{{ '/order'|link }}"><i class="fa fa-shopping-cart fa-fw"></i> {% trans 'Order New Services' %}</a>
+  					  <a href="{{ '/order/domain-checker'|link }}"><i class="fa fa-globe fa-fw"></i> {% trans 'Order Domain' %} </a>
   					  {% if profile.first_name %}
   					  <a href="{{ 'client/logout'|link }}"><i class="fa fa-arrow-left fa-fw"></i> Logout </a>
   					  {% endif %}
@@ -261,11 +266,6 @@
         <footer>
 			<div class="row text-center">
 				<div class="col-lg-12">
-					<p>
-						{% if settings.footer_signature|default %}{{ settings.footer_signature|raw }}
-						{% else %}{{ company.name }} - © {{ now|date('Y') }} {{ company.signature }}
-						{% endif %}
-					</p>
 					<ul class="list-inline">
                         <li><a href="{{ '/about-us'|link }}">{% trans 'About us' %}</a></li>
                         <li><a href="{{ '/tos'|link }}">{% trans 'Terms and conditions' %}</a></li>
@@ -286,6 +286,11 @@
 							<li><a href="http://www.boxbilling.com" title="Billing Software" target="_blank">{% trans 'Powered by BoxBilling' %}</a></li>
 						{% endif %}
                     </ul>
+					<p>
+						{% if settings.footer_signature|default %}{{ settings.footer_signature|raw }}
+						{% else %}{{ company.name }} -  {{ company.signature }} &copy; {{ now|date('Y') }}
+						{% endif %}
+					</p>
 					
 				</div>
 				{% if settings.footer_to_top_enabled %}<a href="#top" class="btn btn-default pull-right"><i class="fa fa-arrow-up"></i> {% trans 'Top' %}</a>{% endif %}
@@ -294,7 +299,7 @@
 	{% endif %}
     </div>
     <!-- /.container -->
-    <div id="loaderwrapper">
+    <div class="loading" id="loaderwrapper">
     	<div id="loaderwrapper2">
     		<div class="loader">
 
@@ -302,6 +307,7 @@
     		<p style="font-size : 18px; margin-top: 20px;">Processing Your Request. Please Wait...</p>
     	</div>
     </div>    
+    
 <noscript>NOTE: Many features on BoxBilling require Javascript and cookies. You can enable both via your browser's preference settings.</noscript>
 </body>
 </html>

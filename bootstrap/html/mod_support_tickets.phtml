@@ -15,11 +15,14 @@
 {% endblock %}
 {% block content %}
 
-	<div class="row">
+	<!--div class="row">
 		<div class="col-md-12">
-			<table class="dtt">
+		</div>
+	</div-->
+			<table class="dtbl">
 				<thead>
-					<tr class="tr">
+					<tr>
+						<th>ID</th>
 						<th>Subject</th>
 						<th>Department</th>
 						<th>Status</th>
@@ -27,10 +30,11 @@
 					</tr>
 				</thead>
 				<tbody>
-					{% set tickets = client.support_ticket_get_list({"per_page":10, "page":request.page}) %}
+					{% set tickets = client.support_ticket_get_list({}) %}
 			        {% for i, ticket in tickets.list %}
 			        <tr>
-			        	<td><a href="{{ 'support/ticket'|link }}/{{ticket.id}}">{{ticket.subject}}</a></td>
+			        	<td><a href="{{ 'support/ticket'|link }}/{{ticket.id}}">{{ticket.id}}</a></td>
+			        	<td style="text-align: left !important;"><a href="{{ 'support/ticket'|link }}/{{ticket.id}}">{{ticket.subject}}</a></td>
 			        	<td>{{ticket.helpdesk.name}}</td>
 			        	<td class="text-center"><span style="margin:auto" class="label {% if ticket.status == "open" %}label-success{% elseif ticket.status == "on_hold" %}label-primary{% elseif ticket.status == "closed" %}label-default{% else %}label-default{% endif %}">
 			        		{% if ticket.status == 'on_hold' %}
@@ -39,19 +43,24 @@
 			        		{{ mf.status_name(ticket.status) }}
 			        		{% endif %}
 			        	</span></td>
-			        	<td>{{ ticket.updated_at|timeago }} {% trans 'ago' %}</td>
+			        	<td data-sort="{{ ticket.updated_at }}">{{ ticket.updated_at|timeago }} {% trans 'ago' %}</td>
 			        </tr>
 					{% else %}{% trans 'The list is empty' %}
 					{% endfor %}
 
 				</tbody>
 			</table>
+
+		<!-- Service Tabs -->
+        <div class="row">
+            <div class="col-lg-12">
+				<div class="list-group">
+				</div>
+				{% include "partial_pagination.phtml" with {'list': tickets} %}
+			
 		</div>
 	</div>
-
-	
 	<div class="text-center">
-		{% include "partial_pagination.phtml" with {'list': tickets} %}
 		<p>
 			{% if guest.extension_is_on({"mod":'kb'}) %}<a class="btn btn-info" data-toggle="collapse" data-target="#kb" aria-expanded="false" aria-controls="kb">{% trans 'Knowledge Base' %}</a>{% endif %}
 			<a class="btn btn-danger" data-toggle="modal" data-target="#tickets">{% trans 'Submit new ticket' %}</a>
@@ -103,7 +112,14 @@
 						<div class="control-group form-group">
 							<div class="controls">
 								<label>{% trans 'Reason' %}:</label>
-								<textarea id="tiny" rows="10" cols="100" class="form-control" name="content" maxlength="999" style="resize:none" required="required" data-iconlibrary="fa"></textarea>
+								<textarea rows="10" cols="100" id="content" class="form-control" name="content" maxlength="999" style="resize:none" required="required" data-provide="markdown" data-iconlibrary="fa"></textarea>
+							</div>
+						</div>
+						<div class="control-group form-group"  id="articles-display" style="display:none;">
+							<div class="controls">
+								<label>{% trans 'Suggested articles based on your message' %}</label>
+                        		<ul id="suggested-articles" class="list-group">
+                         		</ul>
 							</div>
 						</div>
 				</div>
@@ -116,4 +132,85 @@
 		</div>
     </div>
 
+{% endblock %}
+
+
+{% block js %}
+{% autoescape "js" %}
+<script type="text/javascript">
+$(function() {	
+
+	$('.dtbl').DataTable({
+		"initComplete": function(settings, json) {
+		    $('.dataTables_filter input[type=search]').prop({
+		    	placeholder: 'Enter search term...'
+		    });
+		  },
+		  "order": [[4, 'desc']]
+	});
+
+	$('textarea').after(`<p style="margin-top:10px;margin-left:10px;font-size: 12px;"><a href="https://prnt.sc/" target="prnt.sc"><i class='fa fa-upload'> </i> Upload Screenshot</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://dropbox.com" target="uploadfiles.io"><i class='fa fa-dropbox'> </i> Dropbox</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://drive.google.com" target="uploadfiles.io"><i class='fa fa-cloud-upload'> </i> Google Drive</a></p>`);
+
+	
+     const debounce = (func, delay) => {
+            let debounceTimer
+            return function (...args) {
+                const context = this
+                if(debounceTimer){
+                  clearTimeout(debounceTimer)  
+                }                
+                debounceTimer = setTimeout(() => func.apply(context, args), delay)
+            }
+        }
+
+
+        let contentTextarea = document.getElementById('content');
+        contentTextarea.addEventListener('input', debounce(function(){
+
+            if (contentTextarea.value.length > 0) {
+                $('#articles-display').show()
+                getKbArticles(contentTextarea.value);
+            	} 
+				else {
+                $('ul#suggested-articles').empty();
+                $('#articles-display').hide();
+            }
+        }, 250));
+
+        function getKbArticles(msg){
+            $.ajax({
+                global: false,
+                url: bb.restUrl('guest/kb/article_get_list'),
+                data: {
+                    keywords: msg
+                },
+                dataType: 'json',
+                success: function (data) {
+
+                    if (data.error) {
+                        if (data.error.code == 7777) {
+                            $('#account-created-info-block').show();
+                        } else {
+                            bb.msg(data.error.message, 'error');
+                        }
+                    } else {
+                        if (data.result.list.length > 0) {
+                            $('ul#suggested-articles').empty();
+                            $(data.result.list).each(function (index, article) {
+
+                                let item = '<li class="list-group-item"><a href="' +"{{ '/kb'|link }}" + '/' + article.category.slug + '/' + article.slug + '" target="_blank">' + article.title + '</a></li>';
+                                $('ul#suggested-articles').append(item);
+                            });
+                        } else {
+                            $('ul#suggested-articles').empty();
+                        }
+
+                    }
+                }
+            });
+        };
+    
+});
+</script>
+{% endautoescape %}
 {% endblock %}

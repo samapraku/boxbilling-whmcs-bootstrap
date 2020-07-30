@@ -9,7 +9,7 @@
 {% endif %}
 
 {# ------------------------ put your Knowledge Base URL Here ------------------ #}
-{% set kb_site = 'https://wiki.bimasoft.web.id/' %}
+{% set kb_site = 'kb' |link %}
 {# ------------------------ put your Knowledge Base URL Here ------------------ #}
 
 {# Content-before #}
@@ -17,7 +17,7 @@
 	{% if client %}
 		<div class="row">
 			<div class="col-lg-12">
-				<h1 class="page-header">Selamat Datang Kembali, {{ profile.first_name }} {{ profile.last_name }} </h1>
+				<h1 class="page-header">{% trans 'Welcome back' %}, {{ profile.first_name }} {{ profile.last_name }} </h1>
 			</div>
 		</div>	
 	{% else %}
@@ -73,7 +73,7 @@
 								</a>
 							</div>
 							<div class="col-sm-3 col-xs-6 tile">
-								<a href="{{ 'support' }}">
+								<a href="{{ 'support'|link }}">
 									<div class="icon"><i class="fa fa-comments"></i></div>
 									<div class="stat">
 									{% set a = client.support_ticket_get_list({"status":'on_hold'}).total %}
@@ -102,7 +102,7 @@
 				<div class="col-md-12 home-kb-search">
 					<form method="get" action="{{ kb_site }}" target="search-window">
 						<div class="input-group">
-							<input type="text" name="s" class="form-control input-lg" placeholder="Masukkan pertanyaan disini untuk mendapatkan jawaban dari Knowledge Base...">
+							<input type="text" name="s" class="form-control input-lg" placeholder="{% trans 'Search here to get answers from Knowledge Base' %}...">
 							<i class="fa fa-search"></i>
 						</div>
 					</form>
@@ -379,7 +379,7 @@
 						</div>
 					</div>
 				</div>
-				
+				{% if settings.side_menu_contact %}
 				<div class="col-md-4 col-sm-6">
 					<div class="panel panel-default text-center">
 						<div class="panel-heading">
@@ -394,7 +394,7 @@
 						</div>
 					</div>
 				</div>
-
+                {% endif %}
 				{% if guest.extension_is_on({"mod":"news"}) %}
 				<div class="col-md-4 col-sm-6">
 					<div class="panel panel-default text-center">
@@ -460,7 +460,6 @@
 
 			$('.service-get-list a').each(function(index, el) {
 			    str = $(this).html();
-			    console.log (str);
 			    if (str) {
 			        if ( str.indexOf('for') > 0 ) {
 			            start = str.indexOf('for');

@@ -24,8 +24,8 @@
 <div class="row">
 	<div class="col-sm-12">
 	<ul class="nav nav-tabs nav-justified" id="tabs">
-        <li class="active"><a href="#owndomain" data-toggle="tab" rel="owndomain"><i class="fa fa-tree"></i> {% trans 'Use own' %}</a></li>
 		<li class=""><a href="#register" data-toggle="tab" rel="register"><i class="fa fa-tree"></i> {% trans 'Register new domain' %}</a></li>
+        <li class="active"><a href="#owndomain" data-toggle="tab" rel="owndomain"><i class="fa fa-tree"></i> {% trans 'I already have domain' %}</a></li>
         <li class=""><a href="#transfer" data-toggle="tab" rel="transfer"><i class="fa fa-car"></i> {% trans 'Transfer my domain' %}</a></li>
      </ul>
 	</div>
@@ -52,11 +52,7 @@
 						<input type="text" class="form-control" name="domain[register_sld]" value="{{ request.register_sld }}" placeholder="{% trans 'Enter your domain name' %}">
                     </div>
 					<div class="input-group-addon">
-						{% if product.config.free_domain == 1 %}
-							{% set tlds = guest.serviceHosting_free_tlds({'product_id' : product.id}) %}
-						{% else %}
 							{% set tlds = guest.serviceDomain_tlds({"allow_register":1})%}
-						{% endif %}
 						{{ mf.selectboxtld('domain[register_tld]', tlds)}}
 					</div>
 					<div class="input-group-addon">
@@ -67,12 +63,13 @@
 			<div class="form-group col-md-4 col-md-offset-8">
                     <div id="domain-config" style="display:none;">
 						<hr>
-                        <h4>{% trans 'Period' %}:</h4>
+                        <h4>{% trans 'Domain Period' %}:</h4>
                         {{ mf.selectbox('domain[register_years]', {}) }}
+                {% if product.config.free_domain == 1 %}
+                    <div class="alert alert-info mt-5">{% trans 'Discounts will be applied at checkout if applicable' %}.</div>
+                {% endif %} 
                     </div>
 			</div>
-			
-			
 		</div>
 		<div class="tab-pane fade in" id="transfer">
             <h4>{% trans 'Transfer your domain from another registrar' %}</h4>
@@ -98,15 +95,20 @@
 			</div>
 		</div>
 	</div>
-    <div class="row"></div>
+</div>
+<div class="row">
 	<div class="col-md-4 col-md-offset-8 text-center">
-		{% include 'partial_currency.phtml' %}
-		<hr>
+        <h4>{% trans 'Hosting Package Period' %}:</h4>
 		{% include 'partial_pricing.phtml' with {'product': product} %}
 	</div>
 </div>
     {% include 'partial_addons.phtml' with {'product': product} %}
     
+	<div class="form-group col-md-3">
+		<hr>
+        {% include 'partial_currency.phtml' %}
+    </div>
+    <input type="hidden" name="multiple" value="1" />
     <input type="hidden" name="domain[action]" value="owndomain" id="domain-action"/>
     <input type="hidden" name="id" value="{{ product.id }}" />
 </form>
@@ -199,15 +201,5 @@ $(function() {
         );
     }
 });
-</script>
-
-<script type="text/javascript">
-    jQuery(document).ready(function($) {
-        if ($('h1.page-header').text()=='Free Shared Hosting') {
-            $('input[name="domain[owndomain_tld]"]').prop({
-                value : '.freehost.bimasoft.id.web.id'
-            })
-        }
-    });
 </script>
 {% endblock %}
