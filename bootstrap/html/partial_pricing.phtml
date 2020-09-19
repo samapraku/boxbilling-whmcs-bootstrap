@@ -39,7 +39,8 @@
 			<hr>
 			
 
-			{% for code,prices in pricing.recurrent if prices.enabled and prices.setup > 0 %}
+			{% for code,prices in pricing.recurrent  %}
+				{% if prices.enabled and prices.setup > 0 %}
 					<div class="period {{code}}" style="{% if not loop.first %}display: none;{% endif %}">
 						<table class="table">
 							<tr>
@@ -52,6 +53,7 @@
 							</tr>
 						</table>
 					</div>
+				{% endif %}	
 			{% endfor %}
         
         {% endif %}

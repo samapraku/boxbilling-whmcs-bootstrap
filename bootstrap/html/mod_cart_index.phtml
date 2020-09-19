@@ -2,7 +2,9 @@
 
 {% import "macro_functions.phtml" as mf %}
 
-{% block meta_title %}{%trans 'Order confirm' %}{% endblock %}
+{% block meta_title %}
+	{%trans 'Order confirm' %}
+{% endblock %}
 
 {% set cart = guest.cart_get %}
 
@@ -10,7 +12,12 @@
 		<!-- Page Heading/Breadcrumbs -->
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header">{% if cart.items|length > 0 %}{% trans 'Select Product' %}{% else %}{% trans 'You have not selected any product' %}{% endif %}
+			<h1 class="page-header">
+				{% if cart.items|length > 0 %}
+					{% trans 'Select Product' %}
+				{% else %}
+					{% trans 'You have not selected any product' %}
+				{% endif %}
                     <small>{% trans 'Choose products we offer for selling' %}</small>
                 </h1>
 				{% include "partial_steps.phtml" with {'selected': 3} %}
@@ -25,11 +32,16 @@
 		<div class="row">
 			<div class="col-md-12">
 				<div class="well">
-					<h4><i class="fa fa-shopping-cart"></i> {% trans 'Shopping cart' %}</h4>
+					<h4>
+						<i class="fa fa-shopping-cart"></i>
+						{% trans 'Shopping cart' %}</h4>
 					<ul class="list-group">
 						{% for i, item in cart.items %}
 						<li class="list-group-item">
-							{{ item.title }} {% if item.quantity > 1 %}<span class="label label-default">x{{ item.quantity }}</span>{% endif %}
+								{{ item.title }}
+								{% if item.quantity > 1 %}
+									<span class="label label-default">x{{ item.quantity }}</span>
+								{% endif %}
 							<span class="pull-right">
 								<strong>
 								{% if item.discount_price %}
@@ -37,28 +49,40 @@
 								<strong class="text-success">{{ ((item.price * item.quantity) - item.discount_price) | money_convert }}</strong>
 								{% else %}
 									{% if item.quantity > 1 %}
-										{{ item.quantity }}x {{ item.price | money_convert }} = {{ (item.quantity*item.price) | money_convert }}
+												{{ item.quantity }}x
+												{{ item.price | money_convert }}
+												=
+												{{ (item.quantity*item.price) | money_convert }}
 									{% else %}
 										{{ item.price | money_convert }}
 									{% endif %}
 								{% endif %}
 								</strong>
-								{% if item.period | period_title != '-' %}{{ item.period | period_title }}{% endif %}
+									{% if item.period | period_title != '-' %}
+										{{ item.period | period_title }}
+									{% endif %}
 							
-							<button data-cart-item-id="{{ item.id }}" class="btn btn-inverse btn-xs remove-cart-item" title="{% trans 'Remove item' %}"><strong><i class="fa fa-times"></i></strong></button>
+									<button data-cart-item-id="{{ item.id }}" class="btn btn-inverse btn-xs remove-cart-item" title="{% trans 'Remove item' %}">
+										<strong>
+											<i class="fa fa-times"></i>
+										</strong>
+									</button>
 							</span>
 						
 						</li>
 						{% if item.setup_price != 0 %}
 						<li class="list-group-item">
-							{{ item.title }} {% trans 'setup' %}
+									{{ item.title }}
+									{% trans 'setup' %}
 							<span class="pull-right">
-								<strong>{% if item.discount_setup %}
+										<strong>
+											{% if item.discount_setup %}
 									<del>{{ item.setup_price | money_convert }}</del>
 									{{ (item.setup_price - item.discount_setup) | money_convert }}
 								{% else %}
 									{{ item.setup_price | money_convert }}
-								{% endif %}</strong>
+											{% endif %}
+										</strong>
 							</span>
 						</li>
 						{% endif %}
@@ -67,7 +91,8 @@
 				{% if client %}
 				<div class="row">
 					<div class="col-md-6">
-						<p><form action="{{ 'api/guest/cart/apply_promo'|link }}" method="post" class="api-form form-inline" data-api-reload="1">
+								<p>
+									<form action="{{ 'api/guest/cart/apply_promo'|link }}" method="post" class="api-form form-inline" data-api-reload="1">
 							<h4>{% trans 'Have a promo code?' %}</h4>
 							<div class="form-group">
 									<input type="text" class="form-control" name="promocode" id="promocode" value="{{ request.promocode|default(cart.promocode) }}" required="required">
@@ -77,22 +102,27 @@
 							{% else %}
 								<button class="btn btn-primary-blue btn-sm" type="submit">{% trans 'Apply' %}</button>
 							{% endif %}
-						</form></p><br />
+									</form>
+								</p><br/>
 					</div>
 					<div class="col-md-6 text-right">
 						<h4>{% trans 'Total' %}</h4>
 						<div class=" alert alert-info">
 								{% if cart.discount >0 %}
-								{% trans 'SubTotal' %}: {{ (cart.subtotal)| money_convert }}<br />
+										{% trans 'SubTotal' %}:
+										{{ (cart.subtotal)| money_convert }}<br/>
 								{% trans 'Discount' %}: -{{ cart.discount | money_convert }}<br />
 								{% endif %}
 								{% set tax_amount = 0 %}
 								{% if client.client_is_taxable %}
 									{% set tax_rate = client.invoice_get_tax_rate %}
 									{% set tax_amount = cart.total * tax_rate / 100 %}
-									{% trans 'VAT'%} ({{ tax_rate }}%): {{ tax_amount | money_convert }}<br />
+										{% trans 'VAT'%}
+										({{ tax_rate }}%):
+										{{ tax_amount | money_convert }}<br/>
 							{% endif %}
-							<strong>{% trans 'Total:' %}</strong> <strong>{{ (cart.total + tax_amount) | money_convert }}</strong>
+									<strong>{% trans 'Total:' %}</strong>
+									<strong>{{ (cart.total + tax_amount) | money_convert }}</strong>
 						</div>
 					
 						<form method="post" action="{{ 'api/client/cart/checkout'|link }}" class="api-form" data-api-jsonp="onAfterCartCheckout">
@@ -103,7 +133,8 @@
 									{% if cart.currency.code in gtw.accepted_currencies %}
 									<label class="list-group-item">
 										<input type="radio" name="gateway_id" value="{{gtw.id}}" {{loop.first ? 'checked' : ''}} />
-										{% trans 'Pay by' %} {{gtw.title}}
+														{% trans 'Pay by' %}
+														{{gtw.title}}
 										{% if gtw.title == "Custom" %}
 											<i class="fa fa-university fa-2x pull-right"></i>
 										{% elseif gtw.title == "PayPal" %}
@@ -111,7 +142,11 @@
 										{% elseif gtw.title == "Stripe" %}
 											<i class="fa fa-cc-stripe fa-2x pull-right"></i>
 										{% endif %}
-										{% if gtw.description_client %}<br> <small> {{gtw.description_client }} {% endif %} </small>
+														{% if gtw.description_client %}<br>
+															<small>
+																{{gtw.description_client }}
+															{% endif %}
+														</small>
 									</label>
 									{% endif %}
 								{% endfor %}
@@ -120,10 +155,18 @@
 								<p>{% trans 'Total amount will be deducted from account balance' %}</p>
 								{% endif %}
 							</div>
-							<p><button class="btn btn-primary-blue btn-lg" type="submit"><i class="fa fa-shopping-cart"></i> {% trans 'Checkout' %} {{ (cart.total + tax_amount) | money_convert }}</button></p>
+									<p>
+										<button class="btn btn-primary-blue btn-lg" type="submit">
+											<i class="fa fa-shopping-cart"></i>
+											{% trans 'Checkout' %}
+											{{ (cart.total + tax_amount) | money_convert }}</button>
+									</p>
 						</form>
 						{% else %}	
-						<div class="text-right"><strong>{% trans 'Total:' %}</strong> {{ (cart.total) | money_convert }} </div>	
+								<div class="text-right">
+									<strong>{% trans 'Total:' %}</strong>
+									{{ (cart.total) | money_convert }}
+								</div>
 						{% endif %}	
 					</div>
 					<div class="col-md-3">					
@@ -142,13 +185,15 @@
 					<div class="tab-pane well" id="signin">
 						<form method="post" action="" class="api_form form-horizontal" data-api-url="guest/client/login" data-api-reload="1">
 							<div class="form-group">
-								<label for="email" class="col-sm-4 control-label">{% trans 'Email Address' %}: </label>
+									<label for="email" class="col-sm-4 control-label">{% trans 'Email Address' %}:
+									</label>
 								<div class="col-sm-8">
 									<input type="email" name="email" value="{{ request.email }}" required="required" class="form-control">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Password' %}: </label>
+									<label class="col-sm-4 control-label">{% trans 'Password' %}:
+									</label>
 								<div class="col-sm-8">
 									<input type="password" class="form-control" name="password" value="{{ request.password }}" required="required" class="form-control">
 								</div>
@@ -164,20 +209,23 @@
 						<form method="post" action="" class="api_form form-horizontal" data-api-url="guest/client/create" data-api-reload="1">
 							{% set r = guest.client_required %}
 							<div class="form-group">
-								<label for="email" class="col-sm-4 control-label">{% trans 'Email Address' %}: </label>
+									<label for="email" class="col-sm-4 control-label">{% trans 'Email Address' %}:
+									</label>
 								<div class="col-sm-8">
 									<input type="email" name="email" value="{{ request.email }}" required="required" id="reg-email" class="form-control">
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'First Name' %}: </label>
+									<label class="col-sm-4 control-label">{% trans 'First Name' %}:
+									</label>
 								<div class="col-sm-8">
 									<input type="text" name="first_name" value="{{ request.first_name }}" required="required" class="form-control">
 								</div>
 							</div>
 							{% if 'last_name' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Last Name' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Last Name' %}:
+										</label>
 								<div class="col-sm-8">
 									<input type="text" name="last_name" value="{{ request.last_name }}" required="required" class="form-control">
 								</div>
@@ -186,7 +234,8 @@
 							
 							{% if 'company' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Company' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Company' %}:
+										</label>
 								<div class="col-sm-8">
 									<input type="text" name="company" value="{{ request.company }}" required="required" class="form-control">
 								</div>
@@ -195,7 +244,8 @@
 							
 							{% if 'birthday' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Birthday' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Birthday' %}:
+										</label>
 								<div class="col-sm-8">
 									<input type="text" name="birthday" value="" class="form-control">
 								</div>
@@ -204,7 +254,8 @@
 							
 							{% if 'gender' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'You are' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'You are' %}:
+										</label>
 								<div class="col-sm-8">
 									<select name="gender" class="form-control">
 										<option value="male">Male</option>
@@ -218,7 +269,13 @@
 							{% for field_name, field in custom_fields %}
 							{% if field.active %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label" for="{{ field_name }}">{% if field.title is not empty %}{{ field.title }}{% else %} {{ field_name | capitalize }} {% endif %}</label>
+											<label class="col-sm-4 control-label" for="{{ field_name }}">
+												{% if field.title is not empty %}
+													{{ field.title }}
+												{% else %}
+													{{ field_name | capitalize }}
+												{% endif %}
+											</label>
 								<div class="col-sm-8">
 									<input type="text" class="form-control" name="{{ field_name }}" id="{{ field_name }}" value="{{ attribute(request, field_name) }}" {% if field.required %}required="required"{% endif %}>
 								</div>
@@ -227,32 +284,35 @@
 							{% endfor %}
 							
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Password' %}: </label>
+									<label class="col-sm-4 control-label">{% trans 'Password' %}:
+									</label>
 								<div class="col-sm-8">
 									<input type="password" class="form-control" name="password" value="" required="required" id="reg-password" class="form-control">
 								</div>
 							</div>
 							
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Password confirm' %}: </label>
+									<label class="col-sm-4 control-label">{% trans 'Password confirm' %}:
+									</label>
 								<div class="col-sm-8">
 									<input type="password" class="form-control" name="password_confirm" value="" required="required" class="form-control">
 								</div>
 							</div>			
-							{{ mf.recaptcha }}
 
 							{% if 'address_1' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Address' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Address' %}:
+										</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control" name="address_1" value="{{ request.address_1 }}">
+											<input type="text" class="form-control" name="address_1" value="{{ request.address_1 }}" required>
 								</div>
 							</div>
 							{% endif %}
 								
 							{% if 'address_2' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Address 2' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Address 2' %}:
+										</label>
 								<div class="col-sm-8">
 										<input type="text" class="form-control" name="address_2" value="{{ request.address_2 }}">
 								</div>
@@ -261,16 +321,18 @@
 								
 							{% if 'city' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'City' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'City' %}:
+										</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control" name="city" value="{{ request.city }}">
+											<input type="text" class="form-control" name="city" value="{{ request.city }}" required>
 								</div>
 							</div>
 							{% endif %}
 								
 							{% if 'country' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Country' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Country' %}:
+										</label>
 								<div class="col-sm-8">
 									{{ mf.selectbox('country', guest.system_countries, request.country, 0, 'Select country') }}
 								</div>
@@ -279,7 +341,8 @@
 								
 							{% if 'state' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'State' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'State' %}:
+										</label>
 									 {# mf.selectbox('state', guest.system_states, request.state, 0, 'Select state') #}
 								<div class="col-sm-8">
 									<input type="text" class="form-control" name="state" value="{{ request.state }}" />
@@ -289,22 +352,38 @@
 								
 							{% if 'postcode' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Zip/Postal Code' %}: </label>
-								<div class="col-sm-8">
-									<input type="text" class="form-control" name="postcode" value="{{ request.postcode }}">
+										<label class="col-sm-4 control-label">{% trans 'Zip/Postal Code' %}:
+										</label>
+										<div class="col-sm-3">
+											<input type="text" class="form-control" name="postcode" placeholder="0000" value="{{ request.postcode }}">
 								</div>
 							</div>
 							{% endif %}
 								
 							{% if 'phone' in r %}
 							<div class="form-group">
-								<label class="col-sm-4 control-label">{% trans 'Phone Number' %}: </label>
+										<label class="col-sm-4 control-label">{% trans 'Phone Number' %}:
+										</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control" name="phone_cc" value="{{ request.phone_cc }}" style="width: 40px"> <input type="text" name="phone" value="{{ request.phone }}" style="width: 233px">
+											<div class="row">
+												<div class="col-sm-2">
+													<input type="text" class="form-control" name="phone_cc" placeholder="233" value="{{ request.phone_cc }}" required>
+												</div>
+												<div class="col-sm-4">
+													<input type="text" class="form-control" name="phone" placeholder="ex : 244123456" value="{{ request.phone }}" required>
+												</div>
+											</div>
 								</div>
 							</div>
 							{% endif %}
 							
+								<div class="form-group">
+									<div class='col-sm-4'></div>
+									<div class="col-sm-8">
+										{{ mf.recaptcha }}
+									</div>
+								</div>
+
 							<div class="text-right">
 								<input class="btn btn-success" type="submit" value="{% trans 'Register' %}">
 							</div>
@@ -327,8 +406,7 @@
 
 {% block js %}
 <script type="text/javascript">
-function onAfterCartCheckout(result)
-{
+    function onAfterCartCheckout(result) {
     if(result.invoice_hash) {
         bb.redirect('{{"invoice"|link}}' + '/' + result.invoice_hash + '&auto_redirect=1');
     } else {
@@ -342,7 +420,9 @@ $('.remove-cart-item').click(function(e){
         var btn = $(this);
         if (confirm('{% trans 'Are you sure you want to remove this item from cart?' %}')){
             var item_id = $(btn).attr('data-cart-item-id');
-            bb.post("guest/cart/remove_item", {id: item_id}, function(r){
+                bb.post("guest/cart/remove_item", {
+                    id: item_id
+                }, function (r) {
                 bb.msg("{% trans 'Item was removed from cart' %}");
                 location.reload(false);
             });
@@ -353,4 +433,5 @@ $('.remove-cart-item').click(function(e){
 
 });
 </script>
+
 {% endblock %}

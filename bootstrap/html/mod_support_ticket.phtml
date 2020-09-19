@@ -133,6 +133,10 @@
 					$('#msg-'+ (i-1)).insertAfter('#msg-'+i);
 				}
 
+				$('#reply-btn').click(function(event) {
+					tinymce.execCommand('mceFocus',false,'tiny');
+				});
+				
 				$('#close-ticket-btn').click(function(event) {
 					$('#close-ticket-a').click();
 				});

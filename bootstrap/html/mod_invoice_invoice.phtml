@@ -34,8 +34,9 @@
 	{% set banklink =  'invoice/banklink' | link %}
 	{% if invoice.status == 'unpaid' %}
 				<div class="row">
-					<div class="col-lg-6 col-centered">
-					<h4>{% trans 'Select Payment Method to view details' %}</h4>
+					<div class="col-lg-8 col-centered">
+						<div class="well bg-info">
+							<h4>{% trans 'Select Payment Method to View Details' %}</h4>
 					<select name="payment_method" id="payment-selector" class="form-control">
     		    {% if invoice.gateway_id is null %}<option value="" selected disabled hidden>-- Select Payment Method --</option> {% endif%}
 				{% for gtw in guest.invoice_gateways %}
@@ -44,12 +45,12 @@
     			{% endif %}
     			{% endfor %}
 				</select>
+				<div class="text-center">
+					<div class="panel-body" id="gtw-actions"></div>
 					</div>
 				</div>
 				
-				<div class="text-center">
-					<div class="panel-body" id="gtw-actions"></div>
-				</div>
+				
 				{% if invoice.gateway_id and request.auto_redirect %}
 				{% set payment = guest.invoice_payment({"gateway_id" : invoice.gateway_id, "hash":invoice.hash, "auto_redirect":request.auto_redirect }) %}
 					<div class="alert alert-info" id="payment-details">
@@ -82,6 +83,9 @@
 					</div>
 				{% endif %}
 
+					</div>				
+				</div>
+				
 				{% if request.change_payment_method %}
 					<form method="post" action="{{ 'api/guest/invoice/update'|link }}" class="api-form" data-api-redirect="{{ ('invoice/'~invoice.hash)|link({'auto_redirect' : 1}) }}">
 						<div class="list-group">
@@ -172,8 +176,8 @@
 								<tr>
 									<th>#</th>
 									<th>{% trans 'Title' %}</th>
-									<th class="currency">{% trans 'Price' %}</th>
-									<th class="currency">{% trans 'Total' %}</th>
+									<th class="currency">{% trans 'Amount' %}</th>
+									<!--th class="currency">{% trans 'Total' %}</th-->
 								</tr>
 							</thead>
 
@@ -193,13 +197,13 @@
 										{% endif %}
 									</td>
 									<td class="currency">
-										{{ item.price | money(invoice.currency) }}
-									</td>
-									<td class="currency">							
-                    					{% if (item.price * item.quantity) > item.total %}
-                    					{% set subtotal = item.price * item.quantity %}<del>{{subtotal}}</del> {% endif %}
 										{{ item.total | money(invoice.currency) }}
 									</td>
+									<!--td class="currency">							
+                    					{# if (item.price * item.quantity) > item.total #}
+                    					{# set subtotal = item.price * item.quantity %}<del>{{subtotal}}</del> {% endif #}
+										{{ item.total | money(invoice.currency) }}
+									</td-->
 								</tr>
 
 								{% endfor %}
@@ -208,7 +212,7 @@
 							<tfoot>
 							{% if invoice.tax > 0 %}
 								<tr>
-									<th colspan="3">{{ invoice.taxname }} {{ invoice.taxrate }}%</th>
+									<th colspan="2">{{ invoice.taxname }} {{ invoice.taxrate }}%</th>
 									<th class="currency">{{ invoice.tax | money(invoice.currency) }}</th>
 								</tr>
 							{% endif %}
@@ -220,7 +224,7 @@
 								</tr>
 							{% endif %}
 								<tr class="total">
-									<th colspan="3" class="text-right">{% trans 'Total' %}</th>
+									<th colspan="2" class="text-right">{% trans 'Total' %}</th>
 									<th class="currency">{{ invoice.total | money(invoice.currency) }}</th>
 								</tr>
 							</tfoot>
@@ -314,12 +318,12 @@ $(document).ready(function(){
 	
 
 	function loadGtwActions(gtway_id){			
-				let btn = $(`<button type="button" class="btn btn-warning btn-lg" id="click-to-pay" > <i class="fa fa-credit-card"></i> {% trans "Pay now" %} - {% trans "Total:" %} <strong>{{ invoice.total | money(invoice.currency) }}</strong></button>`);
+				let btn = $(`<button type="button" class="btn btn-warning btn-lg {% if invoice.gateway_id and request.auto_redirect %}hidden{% endif %}" id="click-to-pay" > <i class="fa fa-credit-card"></i> {% trans "Pay now" %} - {% trans "Total:" %} <strong>{{ invoice.total | money(invoice.currency) }}</strong></button>`);
 				$('#gtw-actions').html(btn);
 				$('#click-to-pay').addClass('visible');
 
 				$('#click-to-pay').on('click', function(){
-					bb.redirect("{{ 'invoice' | link }}/{{ invoice.hash}}?gateway_id="+gtway_id+"&auto_redirect=1" );
+					bb.redirect("{{ ('invoice/' ~ invoice.hash) | link({'gateway_id':"gtway_id",'auto_redirect':1}) }}" );
 				});
 	}
 
@@ -328,7 +332,7 @@ $(document).ready(function(){
             '{{ 'api/guest/invoice/update'|link }}',
             {gateway_id:gtw_id, hash:'{{invoice.hash}}' },
             function(result) {
-                bb.redirect("{{ 'invoice' | link }}/{{ invoice.hash}}");
+                bb.redirect("{{ ('invoice/' ~ invoice.hash) | link }}");
             }
         );
         return false;

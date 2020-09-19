@@ -38,7 +38,7 @@
                                 <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                {% if settings.side_menu_support %}
+                                {% if settings.side_menu_support and client %}
                                     <li>
                                         <a href="{{ 'support'|link }}"><span><i class="fa fa-life-ring"></i> {% trans 'Tickets' %}</span></a>
                                     </li>
@@ -67,7 +67,7 @@
                                 {% endif %}
                             </ul>
                         </li>
-                        {% if settings.side_menu_support %}
+                        {% if settings.side_menu_support and client %}
                         <li>
                             <a href="{{ 'support'|link }}"><span><i class="fa fa-life-ring"></i> {% trans 'Open Ticket' %}</span></a>
                         </li>

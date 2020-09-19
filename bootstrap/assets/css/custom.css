@@ -77,14 +77,13 @@ p {
   background: none;
 }
 
-.navbar2 .navbar-nav li > a {
+.navbar2 .navbar-nav li > a, .navbar2 .navbar-nav li a:focus {
   color: #fff;
 }
 
 .navbar2 .navbar-nav li > a:hover,
 .navbar2 .navbar-nav li.active > a,
-.navbar2 .navbar-nav li.active > a:hover,
-.navbar2 .navbar-nav li.active > a:focus {
+.navbar2 .navbar-nav li.active > a:hover{
   background: #fff;
   color: #555;
 }
@@ -100,8 +99,12 @@ p {
   float: right;
 }
 
-.navbar2 .dropdown-menu li a {
+.navbar2 .navbar-nav li.dropdown.open a, .navbar2 li a:focus, .navbar2 .dropdown-menu li a {
   color: #033c73;
+}
+
+.nav li a:focus {
+	background-color: transparent;
 }
 
 .navbar-nav li > a > span.badge {

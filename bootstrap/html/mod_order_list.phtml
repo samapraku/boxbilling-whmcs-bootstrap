@@ -25,7 +25,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% set orders = client.order_get_list({"hide_addons":0}) %}
+                {% set orders = client.order_get_list({"hide_addons":0,"per_page":1000}) %}
                 {% for i, order in orders.list %}
                 <tr>
                     <td>
